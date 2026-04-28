@@ -1,129 +1,746 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paseos Esposita 🐾</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paseos Esposita 🐾</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    :root {
+      --primary: #0f4c81;
+      --primary-light: #e6f0fa;
+      --primary-mid: #b3d4f5;
+      --blue: #60a5fa;
+      --blue-dark: #1d4ed8;
+      --blue-light: #eff6ff;
+      --mint: #6ee7b7;
+      --mint-light: #d1fae5;
+      --yellow: #fbbf24;
+      --yellow-light: #fef3c7;
+      --purple: #a78bfa;
+      --purple-light: #ede9fe;
+      --text: #1e1b4b;
+      --muted: #6b7280;
+      --card: #ffffff;
+      --bg: #f0f4f8; /* A subtle cool grey/blue background instead of pink */
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
 
-<style>
-:root {
-  --primary: #0F4C81;
-  --primary-light: #e6eef7;
-  --primary-mid: #c7d9ee;
-  --blue-dark: #0b3a63;
-  --mint: #6ee7b7;
-  --mint-light: #d1fae5;
-  --yellow: #fbbf24;
-  --yellow-light: #fef3c7;
-  --purple: #a78bfa;
-  --purple-light: #ede9fe;
-  --text: #1e1b4b;
-  --muted: #6b7280;
-  --card: #ffffff;
-  --bg: #f5f9ff;
-}
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
 
-body {
-  font-family: 'Nunito', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  max-width: 480px;
-  margin: auto;
-}
+    .app-header {
+      background: linear-gradient(135deg, #0f4c81, #1d4ed8);
+      color: white;
+      padding: 18px 20px 14px;
+      text-align: center;
+    }
+    .app-header h1 { font-family: 'Pacifico', cursive; font-size: 22px; letter-spacing: 1px; }
+    .app-header p { font-size: 12px; opacity: 0.85; margin-top: 3px; }
 
-/* HEADER */
-.app-header {
-  background: linear-gradient(135deg, #0F4C81, #3b82f6);
-  color: white;
-  padding: 18px;
-  text-align: center;
-}
+    .tabs {
+      display: flex;
+      background: white;
+      border-bottom: 2px solid var(--primary-mid);
+      overflow-x: auto;
+      scrollbar-width: none;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      flex: 1; min-width: 70px;
+      padding: 10px 6px 8px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Nunito', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all .2s;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+    }
+    .tab-btn .tab-icon { font-size: 16px; }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-/* BOTONES */
-.btn-primary {
-  background: linear-gradient(135deg, #0F4C81, #3b82f6);
-  color: white;
-}
+    .screen { display: none; padding: 16px; }
+    .screen.active { display: block; }
 
-/* CARDS */
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 14px;
-  margin: 10px;
-}
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 12px rgba(15, 76, 129, 0.08);
+    }
+    .card-title {
+      font-size: 13px; font-weight: 800; color: var(--text);
+      margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+    }
 
-/* HORARIO */
-.horario-grid {
-  display: grid;
-  grid-template-columns: 50px repeat(6, 1fr);
-}
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-box {
+      background: var(--card);
+      border-radius: var(--radius-sm);
+      padding: 14px 12px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .stat-box .stat-val { font-size: 22px; font-weight: 800; }
+    .stat-box .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .stat-box.primary { background: var(--primary-light); }
+    .stat-box.primary .stat-val { color: var(--primary); }
+    .stat-box.blue { background: var(--blue-light); }
+    .stat-box.blue .stat-val { color: var(--blue-dark); }
+    .stat-box.mint { background: var(--mint-light); }
+    .stat-box.mint .stat-val { color: #059669; }
+    .stat-box.yellow { background: var(--yellow-light); }
+    .stat-box.yellow .stat-val { color: #d97706; }
 
-.hor-header {
-  background: var(--primary);
-  color: white;
-  text-align: center;
-  padding: 6px;
-}
+    .progress-wrap { margin-bottom: 6px; }
+    .progress-bar-bg {
+      height: 18px; background: #f3f4f6; border-radius: 99px; overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, #0f4c81, #60a5fa);
+      transition: width .6s ease;
+    }
+    .progress-label {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: var(--muted); margin-top: 5px;
+    }
 
-.hor-slot {
-  border: 1px solid #eee;
-}
+    .input-row { display: flex; flex-direction: column; gap: 8px; }
+    .input-row input, .input-row select {
+      padding: 10px 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: var(--radius-sm);
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: white;
+      width: 100%;
+      transition: border .2s;
+    }
+    .input-row input:focus, .input-row select:focus {
+      outline: none; border-color: var(--primary);
+    }
 
-.hor-time {
-  background: var(--primary-light);
-  text-align: center;
-}
+    .btn {
+      padding: 11px 16px;
+      border: none; border-radius: var(--radius-sm);
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700; font-size: 14px;
+      cursor: pointer; transition: all .15s;
+      width: 100%;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: linear-gradient(135deg, #0f4c81, #1d4ed8); color: white; }
+    .btn-secondary { background: var(--blue-light); color: var(--blue-dark); }
+    .btn-danger { background: #fee2e2; color: #b91c1c; }
+    .btn-sm { padding: 7px 12px; font-size: 12px; width: auto; }
 
-/* OTROS */
-.tab-btn.active {
-  color: var(--primary);
-  border-bottom: 3px solid var(--primary);
-}
-</style>
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      background: #1e1b4b; color: white;
+      padding: 12px 20px; border-radius: 14px;
+      font-size: 13px; font-weight: 600;
+      max-width: 90%; text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      z-index: 999; opacity: 0; pointer-events: none;
+      transition: opacity .3s;
+    }
+    .toast.show { opacity: 1; }
+
+    .paseo-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--primary-light);
+      margin-bottom: 8px;
+      border-left: 4px solid var(--primary);
+    }
+    .paseo-item .pi-name { font-weight: 700; font-size: 13px; }
+    .paseo-item .pi-info { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .paseo-item .pi-val { font-size: 15px; font-weight: 800; color: var(--primary); }
+    .paseo-item .pi-del { background: none; border: none; cursor: pointer; font-size: 16px; color: #f87171; padding: 0 4px; }
+
+    .meta-input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; }
+    .meta-input-row input {
+      flex: 1; padding: 10px 14px;
+      border: 1.5px solid #e5e7eb; border-radius: var(--radius-sm);
+      font-family: 'Nunito', sans-serif; font-size: 14px;
+    }
+    .meta-input-row input:focus { outline: none; border-color: var(--primary); }
+
+    .horario-grid {
+      display: grid; grid-template-columns: 50px repeat(6, 1fr);
+      border: 1.5px solid #e5e7eb; border-radius: var(--radius-sm); overflow: hidden;
+    }
+    .hor-header {
+      background: linear-gradient(135deg, #0f4c81, #1d4ed8);
+      color: white; text-align: center;
+      padding: 8px 2px; font-weight: 800; font-size: 10px;
+    }
+    .hor-slot { border: 0.5px solid #f0f0f0; padding: 4px; min-height: 44px; }
+    .hor-slot textarea {
+      width: 100%; border: none; background: transparent; resize: none;
+      font-family: 'Nunito', sans-serif; font-size: 10px; color: var(--text);
+      min-height: 36px; outline: none;
+    }
+    .hor-time {
+      background: var(--primary-light); font-weight: 700; color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; padding: 4px 2px;
+    }
+
+    .perro-card {
+      background: var(--primary-light);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-left: 4px solid var(--primary);
+    }
+    .perro-name { font-weight: 800; font-size: 14px; }
+    .perro-count { font-size: 11px; color: var(--muted); }
+    .perro-total { font-size: 16px; font-weight: 800; color: var(--primary); }
+
+    .empty-state { text-align: center; padding: 24px 0; color: var(--muted); }
+    .empty-state .empty-icon { font-size: 36px; margin-bottom: 8px; }
+
+    .tarea-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      background: var(--purple-light); margin-bottom: 8px;
+      border-left: 4px solid var(--purple);
+    }
+    .tarea-item input[type=checkbox] { width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer; flex-shrink: 0; }
+    .tarea-item .tarea-text { flex: 1; font-size: 13px; }
+    .tarea-item.done .tarea-text { text-decoration: line-through; color: var(--muted); }
+    .tarea-item .tarea-del { background: none; border: none; cursor: pointer; font-size: 14px; color: #a78bfa; }
+
+    .section-label {
+      font-size: 12px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px;
+    }
+
+    .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; margin-top: 8px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bar-fill {
+      width: 100%; border-radius: 6px 6px 0 0;
+      background: linear-gradient(180deg, #0f4c81, #60a5fa); min-height: 4px;
+    }
+    .bar-lbl { font-size: 9px; color: var(--muted); text-align: center; font-weight: 700; }
+    .bar-val { font-size: 9px; color: var(--primary); font-weight: 800; }
+
+    .tarea-input-row {
+      display: flex; gap: 8px; align-items: center; margin-bottom: 14px;
+    }
+    .tarea-input-row select {
+      flex: 0 0 120px; padding: 10px;
+      border: 1.5px solid #e5e7eb; border-radius: var(--radius-sm);
+      font-family: 'Nunito', sans-serif; font-size: 13px; background: white;
+    }
+    .tarea-input-row input {
+      flex: 1; padding: 10px 14px;
+      border: 1.5px solid #e5e7eb; border-radius: var(--radius-sm);
+      font-family: 'Nunito', sans-serif; font-size: 14px;
+    }
+    .tarea-input-row input:focus,
+    .tarea-input-row select:focus { outline: none; border-color: var(--primary); }
+
+    .filtro-input {
+      padding: 10px 14px; border: 1.5px solid #e5e7eb;
+      border-radius: var(--radius-sm); width: 100%;
+      font-family: 'Nunito', sans-serif; font-size: 14px; margin-bottom: 14px;
+    }
+    .filtro-input:focus { outline: none; border-color: var(--primary); }
+  </style>
 </head>
-
 <body>
 
 <div class="app-header">
   <h1>🐾 Paseos Esposita</h1>
 </div>
 
-<!-- CONTENIDO -->
-<div id="horario-grid" class="horario-grid"></div>
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('dashboard')">
+    <span class="tab-icon">📊</span>Dashboard
+  </button>
+  <button class="tab-btn" onclick="switchTab('registro')">
+    <span class="tab-icon">➕</span>Registrar
+  </button>
+  <button class="tab-btn" onclick="switchTab('paseos')">
+    <span class="tab-icon">🐕</span>Paseos
+  </button>
+  <button class="tab-btn" onclick="switchTab('horario')">
+    <span class="tab-icon">📅</span>Horario
+  </button>
+  <button class="tab-btn" onclick="switchTab('tareas')">
+    <span class="tab-icon">✅</span>Tareas
+  </button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="screen-dashboard" class="screen active">
+  <div class="stat-grid">
+    <div class="stat-box primary">
+      <div class="stat-val" id="dash-total">$0</div>
+      <div class="stat-lbl">Total del mes</div>
+    </div>
+    <div class="stat-box blue">
+      <div class="stat-val" id="dash-count">0</div>
+      <div class="stat-lbl">Paseos hechos</div>
+    </div>
+    <div class="stat-box mint">
+      <div class="stat-val" id="dash-perros">0</div>
+      <div class="stat-lbl">Perros activos</div>
+    </div>
+    <div class="stat-box yellow">
+      <div class="stat-val" id="dash-falta">$0</div>
+      <div class="stat-lbl">Falta para meta</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎯 Meta del mes</div>
+    <div class="meta-input-row">
+      <input type="number" id="meta-input" placeholder="$ Meta mensual">
+      <button class="btn btn-primary btn-sm" onclick="guardarMeta()">Guardar</button>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="prog-bar" style="width:0%"></div>
+      </div>
+      <div class="progress-label">
+        <span id="prog-pct">0%</span>
+        <span id="prog-meta">Meta: $0</span>
+      </div>
+    </div>
+    <div id="meta-msg" style="font-size:12px;color:#0f4c81;font-weight:700;margin-top:8px;text-align:center;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📈 Ganancias por perro</div>
+    <div id="perros-chart">
+      <div class="empty-state"><div class="empty-icon">🐾</div><div>Aún no hay paseos</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🏆 Resumen por perrito</div>
+    <div id="perros-lista">
+      <div class="empty-state"><div class="empty-icon">🐶</div><div>Agrega paseos para ver el resumen</div></div>
+    </div>
+  </div>
+
+  <button class="btn btn-danger" onclick="reiniciarMes()">🔄 Reiniciar mes</button>
+</div>
+
+<!-- REGISTRO -->
+<div id="screen-registro" class="screen">
+  <div class="card">
+    <div class="card-title">🐾 Agregar nuevo paseo</div>
+    <div class="input-row">
+      <input type="text" id="reg-nombre" placeholder="Nombre del perrito 🐶" list="perros-sugeridos">
+      <datalist id="perros-sugeridos"></datalist>
+      <input type="number" id="reg-valor" placeholder="Valor del paseo 💰">
+      <input type="date" id="reg-fecha">
+      <input type="text" id="reg-nota" placeholder="Nota opcional (ej: 1 hora, parque grande)">
+      <button class="btn btn-primary" onclick="agregarPaseo()">✨ Agregar paseo</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💌 Mensaje del día</div>
+    <div id="mensaje-dia" style="font-size:13px;color:#0f4c81;font-weight:700;text-align:center;line-height:1.6;padding:8px 0;">
+      ¡Hola amor! Registra un paseo para ver tu mensaje 🌸
+    </div>
+  </div>
+</div>
+
+<!-- PASEOS -->
+<div id="screen-paseos" class="screen">
+  <div class="card">
+    <div class="card-title">🔍 Filtrar por perrito</div>
+    <input type="text" class="filtro-input" id="filtro-nombre" placeholder="Buscar por nombre..." oninput="renderPaseosFiltro()">
+  </div>
+  <div id="lista-paseos">
+    <div class="empty-state"><div class="empty-icon">🐕</div><div>No hay paseos registrados aún</div></div>
+  </div>
+  <button class="btn btn-secondary" onclick="exportarExcel()" style="margin-top:8px;">📥 Descargar Excel</button>
+</div>
+
+<!-- HORARIO -->
+<div id="screen-horario" class="screen">
+  <div class="card">
+    <div class="card-title">📅 Horario semanal</div>
+    <div id="horario-grid" class="horario-grid"></div>
+    <button class="btn btn-primary" onclick="guardarHorario()" style="margin-top:12px;">💾 Guardar horario</button>
+  </div>
+</div>
+
+<!-- TAREAS -->
+<div id="screen-tareas" class="screen">
+  <div class="card">
+    <div class="card-title">✅ Mis tareas de la semana</div>
+    <div class="tarea-input-row">
+      <select id="tarea-dia">
+        <option>Lunes</option><option>Martes</option><option>Miércoles</option>
+        <option>Jueves</option><option>Viernes</option><option>Sábado</option><option>Domingo</option>
+      </select>
+      <input type="text" id="tarea-text" placeholder="¿Qué tienes que hacer?">
+    </div>
+    <button class="btn btn-primary" onclick="agregarTarea()">+ Agregar tarea</button>
+    <div id="lista-tareas" style="margin-top:14px;">
+      <div class="empty-state"><div class="empty-icon">✨</div><div>Sin tareas por ahora, ¡a descansar!</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const MENSAJES = [
+    "¡Eso es, amor! Cada paseo te acerca más a tu sueño 🌟",
+    "¡Mira qué bien! Los perritos te adoran y yo también 💕",
+    "¡Crack! Con todo, así se hace 🔥",
+    "¡Otro paseo más! Estás imparable, bae 🚀",
+    "¡Qué orgulloso estoy de ti! Sigues sumando 💪",
+    "Los perritos tienen suerte de tenerte a ti 🐾💕",
+    "¡Así se construye un negocio! Paso a pasito 🌸",
+    "Eso amor, con ganas y con todo 💜",
+    "¡Otro perrito feliz gracias a ti! 🐶✨",
+    "¡Tú puedes con esto y con todo lo que se te venga! 💖",
+  ];
 
-const HORAS = [
-  '9am','10am','11am','12pm',
-  '1pm','2pm','3pm','4pm',
-  '5pm','6pm','7pm'
-];
+  const MENSAJES_NO_META = [
+    "No te me aburras amor, si no es este es el otro, ¡con toda! 💪🔥",
+    "Vamos que falta poco, no te me rajes bae 💕",
+    "No te me aburras amor, ¡el mes no ha terminado! Con toda 🌟",
+  ];
 
-function renderHorario() {
-  const grid = document.getElementById('horario-grid');
-  let html = '<div class="hor-header"></div>';
+  const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  const HORAS = ['8am','9am','10am','11am','12pm','1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm'];
 
-  DIAS.forEach(dia => {
-    html += `<div class="hor-header">${dia.slice(0,3)}</div>`;
-  });
+  function getData() {
+    return {
+      paseos: JSON.parse(localStorage.getItem('esposita_paseos') || '[]'),
+      meta: parseFloat(localStorage.getItem('esposita_meta') || '0'),
+      horario: JSON.parse(localStorage.getItem('esposita_horario') || '{}'),
+      tareas: JSON.parse(localStorage.getItem('esposita_tareas') || '[]'),
+    };
+  }
 
-  HORAS.forEach(hora => {
-    html += `<div class="hor-time">${hora}</div>`;
-    DIAS.forEach(dia => {
-      html += `<div class="hor-slot"><textarea></textarea></div>`;
+  function save(key, val) {
+    localStorage.setItem('esposita_' + key, JSON.stringify(val));
+  }
+
+  function switchTab(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    const idx = ['dashboard','registro','paseos','horario','tareas'].indexOf(name);
+    document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+    if (name === 'dashboard') renderDashboard();
+    if (name === 'paseos') renderPaseosFiltro();
+    if (name === 'horario') renderHorario();
+    if (name === 'tareas') renderTareas();
+  }
+
+  function showToast(msg, dur = 3500) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), dur);
+  }
+
+  function agregarPaseo() {
+    const nombre = document.getElementById('reg-nombre').value.trim();
+    const valor = parseFloat(document.getElementById('reg-valor').value);
+    const fecha = document.getElementById('reg-fecha').value;
+    const nota = document.getElementById('reg-nota').value.trim();
+
+    if (!nombre || isNaN(valor) || !fecha) {
+      showToast('¡Completa todos los campos, bae! 🐾');
+      return;
+    }
+
+    const d = getData();
+    d.paseos.push({ nombre, valor, fecha, nota, id: Date.now() });
+    save('paseos', d.paseos);
+
+    document.getElementById('reg-nombre').value = '';
+    document.getElementById('reg-valor').value = '';
+    document.getElementById('reg-nota').value = '';
+
+    const totalActual = d.paseos.reduce((s, p) => s + p.valor, 0);
+    const meta = d.meta;
+    let msg;
+    if (meta > 0 && totalActual >= meta) {
+      msg = '🎉 ¡LLEGASTE A TU META! ¡Eres una campeona amor! 🏆💕';
+    } else if (meta > 0 && totalActual >= meta * 0.8) {
+      msg = '🔥 ¡Casi llegas! Falta poquito, ¡tú puedes amor! 💪';
+    } else if (meta > 0 && totalActual < meta * 0.5) {
+      msg = MENSAJES_NO_META[Math.floor(Math.random() * MENSAJES_NO_META.length)];
+    } else {
+      msg = MENSAJES[Math.floor(Math.random() * MENSAJES.length)];
+    }
+
+    document.getElementById('mensaje-dia').textContent = msg;
+    showToast('¡Paseo registrado! 🐾✨');
+    actualizarSugeridos();
+    renderDashboard();
+  }
+
+  function actualizarSugeridos() {
+    const d = getData();
+    const nombres = [...new Set(d.paseos.map(p => p.nombre))];
+    const dl = document.getElementById('perros-sugeridos');
+    dl.innerHTML = nombres.map(n => `<option value="${n}">`).join('');
+  }
+
+  function renderDashboard() {
+    const d = getData();
+    const total = d.paseos.reduce((s, p) => s + p.valor, 0);
+    const perros = new Set(d.paseos.map(p => p.nombre)).size;
+    const meta = d.meta;
+    const falta = Math.max(0, meta - total);
+    const pct = meta > 0 ? Math.min(100, Math.round(total / meta * 100)) : 0;
+
+    document.getElementById('dash-total').textContent = '$' + total.toLocaleString('es-CO');
+    document.getElementById('dash-count').textContent = d.paseos.length;
+    document.getElementById('dash-perros').textContent = perros;
+    document.getElementById('dash-falta').textContent = falta > 0 ? '$' + falta.toLocaleString('es-CO') : '¡Meta! 🎉';
+    document.getElementById('prog-bar').style.width = pct + '%';
+    document.getElementById('prog-pct').textContent = pct + '%';
+    document.getElementById('prog-meta').textContent = 'Meta: $' + (meta || 0).toLocaleString('es-CO');
+
+    if (meta > 0 && total >= meta) {
+      document.getElementById('meta-msg').textContent = '🎉 ¡Llegaste a tu meta! ¡Eres una campeona, amor! 🏆';
+    } else if (meta > 0) {
+      document.getElementById('meta-msg').textContent = 'No te me aburras amor, si no es este es el otro, ¡con toda! 💪';
+    } else {
+      document.getElementById('meta-msg').textContent = 'Pon tu meta del mes arriba 🎯';
+    }
+
+    if (!document.getElementById('meta-input').value) {
+      document.getElementById('meta-input').value = meta || '';
+    }
+
+    const resumen = {};
+    d.paseos.forEach(p => { resumen[p.nombre] = (resumen[p.nombre] || 0) + p.valor; });
+    const entries = Object.entries(resumen).sort((a, b) => b[1] - a[1]);
+
+    if (entries.length === 0) {
+      document.getElementById('perros-chart').innerHTML = '<div class="empty-state"><div class="empty-icon">🐾</div><div>Aún no hay paseos</div></div>';
+      document.getElementById('perros-lista').innerHTML = '<div class="empty-state"><div class="empty-icon">🐶</div><div>Agrega paseos para ver el resumen</div></div>';
+      return;
+    }
+
+    const maxVal = Math.max(...entries.map(e => e[1]));
+    document.getElementById('perros-chart').innerHTML =
+      '<div class="bar-chart">' + entries.map(([n, v]) => {
+        const h = Math.max(8, Math.round(v / maxVal * 72));
+        const initials = n.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        return `<div class="bar-col">
+          <div class="bar-val">$${Math.round(v / 1000)}k</div>
+          <div class="bar-fill" style="height:${h}px"></div>
+          <div class="bar-lbl">${initials}</div>
+        </div>`;
+      }).join('') + '</div>';
+
+    const counts = {};
+    d.paseos.forEach(p => { counts[p.nombre] = (counts[p.nombre] || 0) + 1; });
+    document.getElementById('perros-lista').innerHTML = entries.map(([n, v]) => `
+      <div class="perro-card">
+        <div>
+          <div class="perro-name">🐶 ${n}</div>
+          <div class="perro-count">${counts[n]} paseo${counts[n] > 1 ? 's' : ''}</div>
+        </div>
+        <div class="perro-total">$${v.toLocaleString('es-CO')}</div>
+      </div>
+    `).join('');
+  }
+
+  function guardarMeta() {
+    const v = parseFloat(document.getElementById('meta-input').value);
+    if (isNaN(v) || v <= 0) { showToast('¡Pon una meta válida! 🎯'); return; }
+    save('meta', v);
+    showToast('¡Meta guardada! ¡Tú puedes, amor! 💪🌟');
+    renderDashboard();
+  }
+
+  function renderPaseosFiltro() {
+    const d = getData();
+    const filtro = (document.getElementById('filtro-nombre')?.value || '').toLowerCase();
+    const lista = filtro
+      ? d.paseos.filter(p => p.nombre.toLowerCase().includes(filtro))
+      : [...d.paseos];
+    const container = document.getElementById('lista-paseos');
+
+    if (lista.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div>Sin resultados</div></div>';
+      return;
+    }
+
+    lista.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    container.innerHTML = lista.map(p => {
+      const fechaFmt = new Date(p.fecha + 'T12:00:00').toLocaleDateString('es-CO', {
+        day: '2-digit', month: 'short', year: 'numeric'
+      });
+      return `<div class="paseo-item">
+        <div>
+          <div class="pi-name">🐶 ${p.nombre}</div>
+          <div class="pi-info">📅 ${fechaFmt}${p.nota ? ' · ' + p.nota : ''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="pi-val">$${p.valor.toLocaleString('es-CO')}</div>
+          <button class="pi-del" onclick="borrarPaseo(${p.id})">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function borrarPaseo(id) {
+    const d = getData();
+    d.paseos = d.paseos.filter(p => p.id !== id);
+    save('paseos', d.paseos);
+    renderPaseosFiltro();
+    renderDashboard();
+    showToast('Paseo eliminado 🗑️');
+  }
+
+  function renderHorario() {
+    const d = getData();
+    const h = d.horario;
+    const grid = document.getElementById('horario-grid');
+    let html = '<div class="hor-header"></div>';
+    DIAS.slice(0, 6).forEach(dia => {
+      html += `<div class="hor-header">${dia.slice(0, 3)}</div>`;
     });
-  });
+    HORAS.forEach(hora => {
+      html += `<div class="hor-slot hor-time">${hora}</div>`;
+      DIAS.slice(0, 6).forEach(dia => {
+        const key = dia + '_' + hora;
+        const val = (h[key] || '').replace(/"/g, '&quot;');
+        html += `<div class="hor-slot"><textarea id="hor_${key}" onchange="saveHorSlot('${key}',this.value)">${val}</textarea></div>`;
+      });
+    });
+    grid.innerHTML = html;
+  }
 
-  grid.innerHTML = html;
-}
+  function saveHorSlot(key, val) {
+    const d = getData();
+    d.horario[key] = val;
+    save('horario', d.horario);
+  }
 
-renderHorario();
+  function guardarHorario() {
+    const d = getData();
+    DIAS.slice(0, 6).forEach(dia => {
+      HORAS.forEach(hora => {
+        const key = dia + '_' + hora;
+        const el = document.getElementById('hor_' + key);
+        if (el) d.horario[key] = el.value;
+      });
+    });
+    save('horario', d.horario);
+    showToast('¡Horario guardado! 📅💕');
+  }
+
+  function agregarTarea() {
+    const dia = document.getElementById('tarea-dia').value;
+    const texto = document.getElementById('tarea-text').value.trim();
+    if (!texto) { showToast('¡Escribe qué tienes que hacer! ✅'); return; }
+    const d = getData();
+    d.tareas.push({ dia, texto, done: false, id: Date.now() });
+    save('tareas', d.tareas);
+    document.getElementById('tarea-text').value = '';
+    renderTareas();
+    showToast('¡Tarea agregada! 💪');
+  }
+
+  function renderTareas() {
+    const d = getData();
+    const container = document.getElementById('lista-tareas');
+    if (d.tareas.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">✨</div><div>Sin tareas por ahora, ¡a descansar!</div></div>';
+      return;
+    }
+    let html = '';
+    DIAS.forEach(dia => {
+      const tareas = d.tareas.filter(t => t.dia === dia);
+      if (tareas.length === 0) return;
+      html += `<div class="section-label" style="margin-top:12px;">📅 ${dia}</div>`;
+      tareas.forEach(t => {
+        html += `<div class="tarea-item ${t.done ? 'done' : ''}">
+          <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTarea(${t.id})">
+          <div class="tarea-text">${t.texto}</div>
+          <button class="tarea-del" onclick="borrarTarea(${t.id})">✕</button>
+        </div>`;
+      });
+    });
+    container.innerHTML = html;
+  }
+
+  function toggleTarea(id) {
+    const d = getData();
+    const t = d.tareas.find(t => t.id === id);
+    if (t) { t.done = !t.done; save('tareas', d.tareas); renderTareas(); }
+  }
+
+  function borrarTarea(id) {
+    const d = getData();
+    d.tareas = d.tareas.filter(t => t.id !== id);
+    save('tareas', d.tareas);
+    renderTareas();
+  }
+
+  function reiniciarMes() {
+    if (!confirm('¿Reiniciar todos los paseos del mes? (El horario y tareas se conservan)')) return;
+    save('paseos', []);
+    renderDashboard();
+    showToast('¡Mes reiniciado! Nuevo comienzo, amor 🌸');
+  }
+
+  function exportarExcel() {
+    const d = getData();
+    if (d.paseos.length === 0) { showToast('No hay paseos para exportar 🐾'); return; }
+    const rows = [['Fecha', 'Nombre del perro', 'Valor', 'Nota']];
+    d.paseos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha)).forEach(p => {
+      rows.push([p.fecha, p.nombre, p.valor, p.nota || '']);
+    });
+    const total = d.paseos.reduce((s, p) => s + p.valor, 0);
+    rows.push(['', '', '', '']);
+    rows.push(['TOTAL', '', total, '']);
+    rows.push(['', '', '', 'Gracias por confiar en Esposita 💙']);
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Paseos');
+    XLSX.writeFile(wb, 'Paseos_Esposita.xlsx');
+  }
+
+  // Inicializar
+  document.getElementById('reg-fecha').value = new Date().toISOString().split('T')[0];
+  actualizarSugeridos();
+  renderDashboard();
+  renderTareas();
 </script>
-
 </body>
 </html>
